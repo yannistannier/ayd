@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: dgfip/ask-your-document-web
+          ports:
+            - containerPort: 3000
+          env:
+            - name : NEXT_PUBLIC_MLFLOW_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: api-config
+                  key: mlflow-uri  
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 3000  # service port
+      targetPort: 3000  # container port to forward requests to

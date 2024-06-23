@@ -1,0 +1,8 @@
+/data
+ayd-ds/tmp
+api/tmp
+/ayd-ds/tmp
+/ayd-ds/ayd_ds/__pycache__
+.idea
+/docker_compose/secret*
+/docker_compose/minio_data

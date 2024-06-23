@@ -1,0 +1,50 @@
+.fr-logo::before,
+.fr-logo::after {
+    content: none !important;
+}
+
+.fr-logo {
+    --text-spacing: 0;
+    --underline-img: none;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 1.0317460317em;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    text-indent: -0.1em;
+    font-size: 1.05rem;
+    color: var(--text-black-white-grey);
+
+    /* Ajout de la photo */
+    background-image: url('/logos/BNP-PA_BIG.png'); /* Remplacez par le chemin de votre image */
+    background-size: 150px auto; /* Taille limite de l'image */
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 150px; /* Largeur définie pour le conteneur */
+    height: 100px; /* Hauteur définie pour le conteneur, ajustez selon votre besoin */
+}
+
+.fr-responsive-img {
+    max-width: 150px; /* ou toute autre taille limite que vous préférez */
+    height: auto; /* pour maintenir les proportions de l'image */
+}
+
+.fr-nav__link[aria-current]:not([aria-current=false]), .fr-nav__btn[aria-current]:not([aria-current=false]) {
+    position: relative;
+    color: #00a95f;
+}
+.fr-nav__link[aria-current]:not([aria-current=false])::before, .fr-nav__btn[aria-current]:not([aria-current=false])::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 2px;
+    height: 1.5rem;
+    margin-top: -0.75rem;
+    background-color: #18753c;
+    --idle: transparent;
+    --hover: #18753c;
+    --active: #00a95f;
+}

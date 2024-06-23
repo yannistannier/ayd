@@ -1,0 +1,431 @@
+rag:
+  classique:
+    gpt-3.5-turbo:
+      prompt: "
+        Tu es un assistant documentaire. Ta missions est de répondre à des questions à partir uniquement du contexte suivant. Si tu ne connais pas l'information, tu diras que tu ne connais pas la réponse. Ta réponse sera concise. Tu utiliseras uniquement l'information pertiente. 
+        Ta réponse devra obligatoirement être en français, c'est un point très important.
+        Voici un exemple de réponse :
+        - L'IA générative se base sur l'architecture transformer développée par Google.
+        
+        Contexte : 
+        {context_str}
+
+        Question :
+        {query_str}  
+
+        Répond à la question en te basant sur le contexte ci-dessus"
+      temperature: "0.1"
+      top_p: "0.1"
+      max_tokens: "2000" # For performance reason
+      comment: "RAG prompt template for 'Classique' response generation"
+    mixtral-instruct:
+      prompt: "<s> [INST]
+        Tu es un assistant documentaire. Ta missions est de répondre à des questions à partir uniquement du contexte suivant. Si tu ne connais pas l'information, tu diras que tu ne connais pas la réponse. Ta réponse sera concise. Tu utiliseras uniquement l'information pertiente. 
+        Ta réponse devra obligatoirement être en français, c'est un point très important.
+        Voici un exemple de réponse :
+        - L'IA générative se base sur l'architecture transformer développée par Google.
+        [/INST]
+        </s>
+        [INST]
+        Contexte : 
+        {context_str}
+
+        Question :
+        {query_str}  
+
+        Répond à la question en te basant sur le contexte ci-dessus
+        [/INST]"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512" # For performance reason
+      comment: "RAG prompt template for 'Classique' response generation"
+  check:
+    mixtral-instruct:
+      prompt: "<s> [INST] You are a helpful code assistant.
+        Your task is to reformulate the question in French using the following pieces of context. 
+        [/INST]</s>
+        [INST]
+        Context : {context_str}
+        Question :{query_str}   
+
+        Just rephrase the question without explanation and only with element from the context in French. 
+        If elements are not in the context, just assume  '''Je ne peux pas formuler de question dans ce contexte'''.
+        [/INST]"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "2048"
+      comment: "Prompt to check if the next LLM could answer to the question with the element of context"
+    gpt-3.5-turbo:
+      prompt: "You are a helpful code assistant.
+        Your task is to reformulate the question in French using the following pieces of context. 
+      
+        Context : {context_str}
+        Question :{query_str}   
+
+        Just rephrase the question without explanation and only with element from the context in French. 
+        If elements are not in the context, just assume  '''Je ne peux pas formuler de question dans ce contexte'''."
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "2048"
+      comment: "Prompt to check if the next LLM could answer to the question with the element of context"
+
+faithfulness:
+  eval:
+    mixtral-instruct:
+      prompt: "[INST]
+      Please tell if a given piece of information is supported by the context.
+      You need to answer with either YES or NO.
+      Answer YES if any of the context supports the information, even if most of the context is unrelated. Some examples are provided below. 
+
+      Information: Apple pie is generally double-crusted.
+      Context: An apple pie is a fruit pie in which the principal filling ingredient is apples. 
+      Apple pie is often served with whipped cream, ice cream ('apple pie à la mode'), custard or cheddar cheese.
+      It is generally double-crusted, with pastry both above and below the filling; the upper crust may be solid or latticed (woven of crosswise strips).
+      Answer: YES
+      Information: Apple pies tastes bad.
+      Context: An apple pie is a fruit pie in which the principal filling ingredient is apples. 
+      Apple pie is often served with whipped cream, ice cream ('apple pie à la mode'), custard or cheddar cheese.
+      It is generally double-crusted, with pastry both above and below the filling; the upper crust may be solid or latticed (woven of crosswise strips).
+      Answer: NO
+      Information: {query_str}
+      Context: {context_str}
+      Answer: 
+      [/INST]"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Faithfulness metric"
+    gpt-3.5-turbo:
+      prompt: "
+      Please tell if a given piece of information is supported by the context.
+      You need to answer with either YES or NO.
+      Answer YES if any of the context supports the information, even if most of the context is unrelated. Some examples are provided below. 
+
+      Information: Apple pie is generally double-crusted.
+      Context: An apple pie is a fruit pie in which the principal filling ingredient is apples. 
+      Apple pie is often served with whipped cream, ice cream ('apple pie à la mode'), custard or cheddar cheese.
+      It is generally double-crusted, with pastry both above and below the filling; the upper crust may be solid or latticed (woven of crosswise strips).
+      Answer: YES
+      Information: Apple pies tastes bad.
+      Context: An apple pie is a fruit pie in which the principal filling ingredient is apples. 
+      Apple pie is often served with whipped cream, ice cream ('apple pie à la mode'), custard or cheddar cheese.
+      It is generally double-crusted, with pastry both above and below the filling; the upper crust may be solid or latticed (woven of crosswise strips).
+      Answer: NO
+      Information: {query_str}
+      Context: {context_str}
+      Answer: "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Faithfulness metric"
+
+  refine: 
+    mixtral-instruct:
+      prompt: "[INST]
+          We want to understand if the following information is present in the context information: {query_str}
+          We have provided an existing YES/NO answer: {existing_answer}
+          We have the opportunity to refine the existing answer (only if needed) with some more context below.
+          ------------
+          {context_msg}
+          ------------
+          If the existing answer was already YES, still answer YES. If the information is present in the new context, answer YES. Otherwise answer NO.
+          [/INST]
+          "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to refine the Faithfulness metric if necessary"
+    gpt-3.5-turbo:
+      prompt: "
+          We want to understand if the following information is present in the context information: {query_str}
+          We have provided an existing YES/NO answer: {existing_answer}
+          We have the opportunity to refine the existing answer (only if needed) with some more context below.
+          ------------
+          {context_msg}
+          ------------
+          If the existing answer was already YES, still answer YES. If the information is present in the new context, answer YES. Otherwise answer NO.
+          
+          "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to refine the Faithfulness metric if necessary"
+relevancy:
+  eval:
+    mixtral-instruct:
+      prompt: "[INST]
+        Your task is to evaluate if the response for the query     is in line with the context information provided.
+        You have two options to answer. Either YES/ NO.
+        Answer - YES, if the response for the query     is in line with context information otherwise NO.
+        Query and Response: 
+        {query_str}
+        Context: 
+        {context_str}
+        Answer: 
+        [/INST]
+            "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Relevancy metric"
+    gpt-3.5-turbo:
+      prompt: "
+        Your task is to evaluate if the response for the query     is in line with the context information provided.
+        You have two options to answer. Either YES/ NO.
+        Answer - YES, if the response for the query     is in line with context information otherwise NO.
+        Query and Response: 
+        {query_str}
+        Context: 
+        {context_str}
+        Answer:"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Relevancy metric"
+  refine: 
+    mixtral-instruct:
+      prompt: "[INST]
+          We want to understand if the following query and response isin line with the context information: 
+          {query_str}
+          We have provided an existing YES/NO answer: 
+          {existing_answer}
+          We have the opportunity to refine the existing answer (only if needed) with some more context below.
+          ------------
+          {context_msg}
+          ------------
+          If the existing answer was already YES, still answer YES. If the information is present in the new context, answer YES. Otherwise answer NO.
+          [/INST]"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to refine the Relevancy metric if necessary"
+    gpt-3.5-turbo:
+      prompt: "
+          We want to understand if the following query and response isin line with the context information: 
+          {query_str}
+          We have provided an existing YES/NO answer: 
+          {existing_answer}
+          We have the opportunity to refine the existing answer (only if needed) with some more context below.
+          ------------
+          {context_msg}
+          ------------
+          If the existing answer was already YES, still answer YES. If the information is present in the new context, answer YES. Otherwise answer NO.
+          "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to refine the Relevancy metric if necessary"
+
+correctness:
+  eval:
+    mixtral-instruct:
+      prompt: "[INST]
+            system: 
+            You are an expert evaluation system for a question answering chatbot.
+
+            You are given the following information:
+            - a user query, and
+            - a generated answer
+
+            You may also be given a reference answer to use for reference in your evaluation.
+
+            Your job is to judge the relevance and correctness of the generated answer.
+            Output a single score that represents a holistic evaluation.
+            You must return your response in a line with only the score.
+            Do not return answers in any other format.
+            On a separate line provide your reasoning for the score as well.
+
+            Follow these guidelines for scoring:
+            - Your score has to be between 1 and 5, where 1 is the worst and 5 is the best.
+            - If the generated answer is not relevant to the user query, you should give a score of 1.
+            - If the generated answer is relevant but contains mistakes, you should give a score between 2 and 3.
+            - If the generated answer is relevant and fully correct, you should give a score between 4 and 5.
+
+            Example Response:
+            4
+            The generated answer has the exact same metrics as the reference answer,     but it is not as concise.
+
+
+            user: 
+            ## User Query
+            {query}
+
+            ## Reference Answer
+            {reference_answer}
+
+            ## Generated Answer
+            {generated_answer}
+
+            assistant: 
+            [/INST]
+            "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Correctness metric"
+    gpt-3.5-turbo:
+      prompt: "
+            system: 
+            You are an expert evaluation system for a question answering chatbot.
+
+            You are given the following information:
+            - a user query, and
+            - a generated answer
+
+            You may also be given a reference answer to use for reference in your evaluation.
+
+            Your job is to judge the relevance and correctness of the generated answer.
+            Output a single score that represents a holistic evaluation.
+            You must return your response in a line with only the score.
+            Do not return answers in any other format.
+            On a separate line provide your reasoning for the score as well.
+
+            Follow these guidelines for scoring:
+            - Your score has to be between 1 and 5, where 1 is the worst and 5 is the best.
+            - If the generated answer is not relevant to the user query, you should give a score of 1.
+            - If the generated answer is relevant but contains mistakes, you should give a score between 2 and 3.
+            - If the generated answer is relevant and fully correct, you should give a score between 4 and 5.
+
+            Example Response:
+            4
+            The generated answer has the exact same metrics as the reference answer,     but it is not as concise.
+
+
+            user: 
+            ## User Query
+            {query}
+
+            ## Reference Answer
+            {reference_answer}
+
+            ## Generated Answer
+            {generated_answer}
+
+            assistant:
+            "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "512"
+      comment: "Prompt to evaluate the Correctness metric"
+retrieval_evaluation:
+  eval: 
+    mixtral-instruct:
+      prompt: "<s> [INST] 
+            You are a helpful assistant. Your task is to classify if the informations asked into the question are in the following pieces of context. 
+            Answer with YES or NO. 
+            For example :
+            - Question : What is the size of the Effeil Tower?
+            - Context : The Effeil tower is the most visited monument in Paris \n\n 
+            The Effeil tower is the symbol of Paris 
+            Your answer will be : No, query cannot be answered by the given context
+
+            - Question : What is the Birthday of Barack Obama ? 
+            Obama was the 44th president of the United States of America \n\n 
+            Barack Obama was the first black president of the United states  \n\n 
+            Barack Obama has receive the nobel price for freedom \n\n
+            Obama was born on the 4th of august 1961
+            [/INST]
+            </s> 
+            [INST]
+            Context : {context}
+            Question :{query}   
+            [/INST]"
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "128"
+      comment: "This prompt is used for retriever evaluation by using LLM to cross information between chunks" 
+    gpt-3.5-turbo:
+      prompt: "
+            You are a helpful assistant. Your task is to classify if the informations asked into the question are in the following pieces of context. 
+            Answer with YES or NO. 
+            For example :
+            - Question : What is the size of the Effeil Tower?
+            - Context : The Effeil tower is the most visited monument in Paris \n\n 
+            The Effeil tower is the symbol of Paris 
+            Your answer will be : No, query cannot be answered by the given context
+
+            - Question : What is the Birthday of Barack Obama ? 
+            Obama was the 44th president of the United States of America \n\n 
+            Barack Obama was the first black president of the United states  \n\n 
+            Barack Obama has receive the nobel price for freedom \n\n
+            Obama was born on the 4th of august 1961
+            
+            Context : {context}
+            Question :{query}   
+            "
+      temperature: "0.0"
+      top_p: "0.1"
+      max_tokens: "128"
+      comment: "This prompt is used for retriever evaluation by using LLM to cross information between chunks" 
+fiab:
+  process:
+    mixtral-instruct:
+      prompt: "[INST]
+        Ta mission est fiabiliser le contenu du document issu d'une extraction via un parser PDF. En effet, lors du parsing, il est possible que certains mots soient interchangés. 
+        Par exemple, si dans le document, on retrouve : 
+        Qu'est que ce soir ?\n\nOn mange
+        Alors, tu retourneras :
+        Qu'est qu'on mange ce soir.
+
+        Fiabilises le document suivant afin qu'il puisse être intégré dans une base documentaire : {document}
+
+        Tu dois commencer ta réponse par les mots suivants :
+        Document fiabilisé : 
+        [/INST]" 
+      temperature: "0.0"
+      top_p: "0.01"
+      max_tokens: "32000"
+      comment: "This prompt is used to increase parsing quality by using LLM"
+    gpt-3.5-turbo:
+      prompt: "
+        Ta mission est fiabiliser le contenu du document issu d'une extraction via un parser PDF. En effet, lors du parsing, il est possible que certains mots soient interchangés. 
+        Par exemple, si dans le document, on retrouve : 
+        Qu'est que ce soir ?\n\nOn mange
+        Alors, tu retourneras :
+        Qu'est qu'on mange ce soir.
+
+        Fiabilises le document suivant afin qu'il puisse être intégré dans une base documentaire : {document}
+
+        Tu dois commencer ta réponse par les mots suivants :
+        Document fiabilisé :" 
+      temperature: "0.0"
+      top_p: "0.01"
+      max_tokens: "32000"
+      comment: "This prompt is used to increase parsing quality by using LLM"
+generation_eval:
+  generate_question:
+    mixtral-instruct:
+      prompt: "<s> [INST]
+          Ta mission est de générer une question en français à partir d'un extrait d'un document. Tu généreras une question spécifique à partir du paragraphe donné. 
+          Par exemple : 
+          - Quelle est l'information clé dans le paragraphe donné ?
+          - Combien d'emplois ont été implantés dans les services relocalisés en 2022 ?
+          [/INST]
+          </s>
+          [INST]
+          Paragraphe :
+          {content}
+
+          Génère une question en français à partir du paragraphe ci-dessus :
+          [/INST]
+        "
+      temperature: "0.0"
+      top_p: "0.01"
+      max_tokens: "1024"
+      comment: "This prompt is used to create a dataset of query based on document's chunks"
+    gpt-3.5-turbo:
+      prompt: "
+          Ta mission est de générer une question en français à partir d'un extrait d'un document. Tu généreras une question spécifique à partir du paragraphe donné. 
+          Par exemple : 
+          - Quelle est l'information clé dans le paragraphe donné ?
+          - Combien d'emplois ont été implantés dans les services relocalisés en 2022 ?
+          
+          Paragraphe :
+          {content}
+
+          Génère une question en français à partir du paragraphe ci-dessus :
+        "
+      temperature: "0.0"
+      top_p: "0.01"
+      max_tokens: "1024"
+      comment: "This prompt is used to create a dataset of query based on document's chunks"

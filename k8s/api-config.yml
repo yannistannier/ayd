@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  minio-endpoint: "minio.dtnum-poc-minio.dgfip.nuage01.fi.francecloud.rie.gouv.fr"
+  minio-collections-bucket-name: "askyourdocument"
+  openai-api-base: http://10.156.254.10:8000/v1
+  openai-api-version: "2023-07-01-preview"
+  qdrant-endpoint: "10.156.254.10:6335"
+  qdrant-base-collection-name: "demo"
+  no-proxy: "10.156.254.10,10.156.210.226"
+  mongodb-database-name: "test"
+  rag-precision: "5"
+  models: "{'embed_model': 'dgfip-e5-large',
+    'llm_model': 'mixtral-instruct',
+    'fiab_llm_model': 'mixtral-instruct',
+    'llm_judge': 'mixtral-instruct',
+    'eval_generation_llm': 'mixtral-instruct'
+    }"
+  mlflow-uri : "http://10.156.210.226:5011"
+  prompt-file-path : prompts.yaml
+  logger-path: "/var/logs/access.log"
+  logger-level: "info"
+  logger-retention: "1 months"
+  logger-rotation: "20 days"
+

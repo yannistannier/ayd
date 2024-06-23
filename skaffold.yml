@@ -1,0 +1,40 @@
+apiVersion: skaffold/v3
+kind: Config
+metadata:
+  name: ask-your-document
+build:
+  local:
+    # We do not want to push the images to a registry especially during local development
+    push: false
+  artifacts:
+    - image: dgfip/ask-your-document-api
+      context: api  # The context is the directory where the Dockerfile is located
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        infer: [ "**/*" ]   # All files are synced without triggering an image build on modification
+    - image: dgfip/ask-your-document-web
+      context: web
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        infer:
+          # We'll be more specific since we do not want to sync the node_modules directory
+          - src/**/*
+          - public/**/*
+
+manifests:
+  rawYaml:
+    - k8s/mongo/mongo-config.yml
+    - k8s/mongo/mongo-pv.yml
+    - k8s/mongo/mongo-pvc.yml
+    - k8s/mongo/mongo-secret.yml
+    - k8s/mongo/mongo-storage-class.yml
+    - k8s/mongo/mongo.yml
+    - k8s/nginx-config.yml
+    - k8s/redis.yml
+    - k8s/api-secret.yml
+    - k8s/api-config.yml
+    - k8s/api.yml
+    - k8s/web.yml
+    - k8s/app-ingress.yml

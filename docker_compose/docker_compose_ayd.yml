@@ -1,0 +1,94 @@
+version: '3.9'
+
+networks:
+  caradoc:
+    driver: bridge
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    restart: always
+    ports:
+      - "8111:8111"
+    volumes: 
+      - ./nginx:/etc/nginx/conf.d/
+    networks:
+      - caradoc
+
+  web:
+    image: caradoc-web:1.0
+    build: ../web
+    container_name: caradoc_web
+    restart: unless-stopped
+    tty: true
+    expose: 
+      - "3000"
+    networks:
+      - caradoc
+
+  api:
+    image: caradoc-api:1.0
+    build: ../api
+    expose:
+      - "8100"
+    container_name: caradoc_api
+    restart: unless-stopped
+    tty: true
+    networks:
+      - caradoc
+    volumes:
+      - /Users/yannis/LLM/ask-your-document/api:/app
+    environment:
+      - MODELS_EMBED=text-embedding-ada-002
+      - MODELS_LLM=gpt-3.5-turbo
+      - QDRANT_ENDPOINT=http://qdrant:6333
+      - QDRANT_BASE_COLLECTION_NAME=qdr
+      - NO_PROXY=0.0.0.0
+      - MINIO_ENDPOINT=0.0.0.0:9000
+      - MINIO_ACCESS_KEY=xxxxxxxx
+      - MINIO_SECRET_KEY=xxxxxxxx
+      - MINIO_COLLECTIONS_BUCKET_NAME=test
+      - OPENAI_API_KEY=sk-xxxxxxx
+      - MONGODB_URI=mongodb://dtnum:mongodbdcaradoc@caradoc-dev
+      - MONGO_PORT=27017
+      - MONGODB_DATABASE_NAME=test
+      - MONGO_USERNAME=dtnum
+      - MONGO_PASSWORD=mongodbdcaradoc
+      - LOGGER_LEVEL=INFO
+      - RAG_PRECISION=5
+    command: ["uvicorn", "app.main:app", "--root-path", "/api","--reload", "--host", "0.0.0.0", "--port" , "8100"]
+
+  redis-service:
+    image: redis
+    ports:
+      - "6380:6380"
+    networks:
+      - caradoc
+ 
+  caradoc-dev:
+    image: mongo:latest
+    container_name: caradoc-dev
+    volumes:
+      - /Users/yannis/LLM/mongo-data:/data/db
+      - /Users/yannis/LLM/mongo-app:/var/www/html
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=dtnum
+      - MONGO_INITDB_ROOT_PASSWORD=mongodbdcaradoc
+    ports:
+      - "27017:27017"
+    command: [ "--auth" ]
+    networks:
+      - caradoc
+  
+  qdrant:
+    image: qdrant/qdrant:dev
+    restart: always
+    ports:
+      - "6333:6333"
+    volumes: 
+      - /Users/yannis/LLM/qdrant_storage:/qdrant/storage:z
+    networks:
+      - caradoc
+  
+  
